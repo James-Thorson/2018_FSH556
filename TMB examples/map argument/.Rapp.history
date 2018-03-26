@@ -1,0 +1,36 @@
+# Simulate predictors#
+Factor = rep( 1:10, each=10)#
+Z = rnorm( length(unique(Factor)), mean=0, sd=1)#
+X0 = 0#
+#
+# Simulate response#
+Y = Z[Factor] + X0 + rnorm( length(Factor), mean=0, sd=1)
+library(TMB)#
+#
+# Compile model#
+Version = "linear_mixed_model"#
+compile( paste0(Version,".cpp") )#
+#
+# Build inputs#
+Data = list( "n_data"=length(Y), "n_factors"=length(unique(Factor)), "Factor"=Factor-1, "Y"=Y)#
+Parameters = list( "X0"=-10, "log_SD0"=2, "log_SDZ"=2, "Z"=rep(0,Data$n_factor) )
+Data
+Parameters
+# Turn off random effects#
+Map = list()#
+Map[["log_SDZ"]] = factor(NA)#
+Map[["Z"]] = factor( rep(NA,Data$n_factor) )
+Map
+# Build object#
+dyn.load( dynlib("linear_mixed_model") )#
+Obj = MakeADFun(data=Data, parameters=Parameters, map=Map)
+Obj
+Obj$par
+# Turn off random effects#
+Map = list()#
+Map[["log_SDZ"]] = factor(NA)
+Map
+# Build object#
+dyn.load( dynlib("linear_mixed_model") )#
+Obj = MakeADFun(data=Data, parameters=Parameters, map=Map)
+Obj$par
