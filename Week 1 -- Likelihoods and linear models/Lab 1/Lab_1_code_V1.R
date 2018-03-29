@@ -94,6 +94,7 @@ if( run_animations==TRUE ){
 ###########
 
 devtools::install_github("nwfsc-assess/geostatistical_delta-GLMM")
+devtools::install_github("kaskr/TMB_contrib_R/TMBhelper")
 library( SpatialDeltaGLMM )
 
 #
