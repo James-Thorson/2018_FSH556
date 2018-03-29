@@ -1,4 +1,6 @@
 
+#include <TMB.hpp>
+
 // dlnorm
 template<class Type>
 Type dlognorm(Type x, Type meanlog, Type sdlog, int give_log=0){
@@ -7,8 +9,7 @@ Type dlognorm(Type x, Type meanlog, Type sdlog, int give_log=0){
   if(give_log) return logres; else return exp(logres);
 }
 
-// Space time
-#include <TMB.hpp>
+// Main function
 template<class Type>
 Type objective_function<Type>::operator() ()
 {
@@ -25,6 +26,8 @@ Type objective_function<Type>::operator() ()
   Type zero_prob = 1 / (1 + exp(-theta_z(0)));
   Type logsd = exp(theta_z(1));
   int n_data = y_i.size();
+  int n_j = X_ij.row(0).size();
+
   vector<Type> jnll_i(n_data);
   Type jnll = 0;
   Type pred_jnll = 0;
