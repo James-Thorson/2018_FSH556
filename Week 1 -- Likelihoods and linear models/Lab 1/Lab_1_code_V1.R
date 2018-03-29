@@ -95,10 +95,9 @@ if( run_animations==TRUE ){
 
 devtools::install_github("nwfsc-assess/geostatistical_delta-GLMM")
 devtools::install_github("kaskr/TMB_contrib_R/TMBhelper")
-library( SpatialDeltaGLMM )
 
 #
-data(WCGBTS_Canary_example)
+data(WCGBTS_Canary_example, package="SpatialDeltaGLMM" )
 CPUE = WCGBTS_Canary_example$HAUL_WT_KG
 X = cbind( "Intercept"=rep(1,length(CPUE)) )
 
@@ -121,19 +120,19 @@ SD = sdreport( Obj ) # standard errors
 
 ### Check convergence
 # Are the gradients close to zero
-all(abs(Opt$diagnostics[,'final_gradient'])>0.0001)
+all(abs(Opt$diagnostics[,'final_gradient'])<0.0001)
 # Is the hessian positive definite?
 (SD$pdHess==TRUE)
 
 # Extract stuff
-Report = Obj$report()
+Report = Obj$report( par=Opt$par )
 
 # Visualize fit
 png( file="Canary_histogram--with_fit.png", width=4, height=4, res=200, units="in")
   par( mar=c(3,3,2,0), mgp=c(2,0.5,0), tck=-0.02)
-  hist( log(1+CPUE), freq=FALSE, col=rgb(1,0,0,0.2) )
+  hist( log(1+CPUE), freq=FALSE, breaks=50, col=rgb(1,0,0,0.2) )
   Sim_CPUE = (1-rbinom(1e5, size=1, prob=Report$zero_prob)) * rlnorm(1e5, meanlog=Report$linpred_i, sdlog=Report$logsd)
-  hist( log(1+Sim_CPUE), freq=FALSE, add=TRUE, col=rgb(0,0,1,0.2) )
+  hist( log(1+Sim_CPUE), freq=FALSE, breaks=50, add=TRUE, col=rgb(0,0,1,0.2) )
   legend( "topright", bty="n", legend=c("Observed","Predicted"), fill=c("red","blue"))
 dev.off()
 

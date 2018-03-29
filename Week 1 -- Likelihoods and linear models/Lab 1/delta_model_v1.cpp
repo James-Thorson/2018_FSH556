@@ -40,5 +40,7 @@ Type objective_function<Type>::operator() ()
   REPORT( zero_prob );
   REPORT( logsd );
   REPORT( linpred_i );
+  ADREPORT( zero_prob );
+
   return jnll;
 }
