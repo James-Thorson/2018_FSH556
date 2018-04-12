@@ -59,13 +59,13 @@ compile( paste0(Version,".cpp") )
 
 # Build inputs
 Data = list( "nt"=nt, "log_b_t"=log_b_t )
-Parameters = list( "log_d0"=0, "log_sigmaP"=1, "log_sigmaM"=1, "alpha"=0, "rho"=0, "log_d_t"=rep(0,nt) )
+Parameters = list( "log_d0"=0, "log_sigmaP"=1, "log_sigmaM"=1, "alpha"=0, "rho"=0, "log_d_t"=rep(0,Data$nt) )
 Random = c("log_d_t")
 if( Use_REML==TRUE ) Random = union( Random, c("log_d0","alpha","rho") )
 
 # Build object
 dyn.load( dynlib("gompertz") )
-Obj = MakeADFun(data=Data, parameters=Parameters, random=Random)  #
+Obj = MakeADFun(data=Data, parameters=Parameters, random=Random, DLL="gompertz")  #
 
 # Prove that function and gradient calls work
 Obj$fn( Obj$par )
@@ -79,17 +79,49 @@ Opt = nlminb( start=Obj$par, objective=Obj$fn, gradient=Obj$gr, control=list("tr
 
 # Get reporting and SEs
 Report = Obj$report()
-  SD = sdreport( Obj )
+  Opt$SD = sdreport( Obj )
 
 for( z in 1:3 ){
   png( file=paste0("gompertz_",z,".png"), width=8, height=5, res=200, units="in" )
     par( mar=c(3,3,1,1), mgp=c(2,0.5,0), tck=-0.02 )
-    plot( x=1:nt, y=log_b_t, col="blue", cex=1.2, xlab="Time", ylab="Value", pch=20 )
+    plot( x=1:Data$nt, y=Data$log_b_t, col="blue", cex=1.2, xlab="Time", ylab="Value", pch=20 )
     if(z>=2){
-      points( x=1:nt, y=as.list(SD,"Estimate")$log_d_t, col="red" )
-      for( t in 1:nt) lines( x=rep(t,2), y=as.list(SD,"Estimate")$log_d_t[t]+c(-1.96,1.96)*as.list(SD,"Std. Error")$log_d_t[t], col="red" )
+      points( x=1:Data$nt, y=as.list(Opt$SD,"Estimate")$log_d_t, col="red" )
+      for( t in 1:Data$nt) lines( x=rep(t,2), y=as.list(Opt$SD,"Estimate")$log_d_t[t]+c(-1.96,1.96)*as.list(Opt$SD,"Std. Error")$log_d_t[t], col="red" )
     }
-    if(z>=3) lines( x=1:nt, y=log_d_t, col="black", lwd=2 )
+    if(z>=3) lines( x=1:Data$nt, y=log_d_t, col="black", lwd=2 )
   dev.off()
 }
+
+######################
+# Download real data and run again
+######################
+
+# devtools::install_github("james-thorson/FishData")
+
+# Download data for Alaska pollock
+CPUE = FishData::download_catch_rates( survey="Eastern_Bering_Sea", species_set="Gadus chalcogrammus", error_tol=0.01, localdir=paste0(getwd(),"/") )
+B_t = tapply( CPUE[,'Wt'], INDEX=CPUE[,'Year'], FUN=mean )
+
+# Run Gompertz model again
+Data = list( "nt"=length(B_t), "log_b_t"=log(B_t) )
+Parameters = list( "log_d0"=0, "log_sigmaP"=1, "log_sigmaM"=1, "alpha"=0, "rho"=0, "log_d_t"=rep(0,Data$nt) )
+Obj = MakeADFun(data=Data, parameters=Parameters, random=Random, DLL="gompertz")  #
+Opt = TMBhelper::Optimize( obj=Obj )
+
+# Get reporting and SEs
+Report = Obj$report()
+
+for( z in 1:2 ){
+  png( file=paste0("pollock_",z,".png"), width=8, height=5, res=200, units="in" )
+    par( mar=c(3,3,1,1), mgp=c(2,0.5,0), tck=-0.02 )
+    plot( x=1:Data$nt, y=Data$log_b_t, col="blue", cex=1.2, xlab="Time", ylab="Value", pch=20 )
+    if(z>=2){
+      points( x=1:Data$nt, y=as.list(Opt$SD,"Estimate")$log_d_t, col="red" )
+      for( t in 1:Data$nt) lines( x=rep(t,2), y=as.list(Opt$SD,"Estimate")$log_d_t[t]+c(-1.96,1.96)*as.list(Opt$SD,"Std. Error")$log_d_t[t], col="red" )
+    }
+  dev.off()
+}
+
+write.csv( cbind(Opt$diagnostics, summary(Opt$SD,"fixed")[,'Std. Error']), file=paste0(getwd(),"/pollock.csv") )
 

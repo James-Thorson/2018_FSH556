@@ -1,6 +1,6 @@
 
 setwd( "C:/Users/James.Thorson/Desktop/Project_git/2018_FSH556/Week 3 -- Temporal Models/Lecture" )
-Use_REML = FALSE
+Use_REML = TRUE
 set.seed(2)
 
 ######################
