@@ -112,7 +112,7 @@ compile( paste0(Version,".cpp") )
 
 # Build object
 dyn.load( dynlib("multivariate_kalman_with_simulation") )
-Obj = MakeADFun(data=Data, parameters=Parameters, random=Random, map=Map)  #
+Obj = MakeADFun(data=Data, parameters=Parameters, random=Random, map=Map, DLL="multivariate_kalman_with_simulation")  #
 
 # Optimize
 Opt = TMBhelper::Optimize( obj=Obj, getsd=TRUE, newtonsteps=1 )
@@ -122,8 +122,8 @@ if(FALSE){
   # Do simulation
   SimPar = matrix( NA, nrow=100, ncol=length(Opt$par), dimnames=list(NULL,names(Opt$par)) )
   for( i in 1:nrow(SimPar) ){
-    SimData <- Obj$simulate(par=Obj$env$last.par, complete=TRUE)
-    Obj2 <- MakeADFun(data=SimData, parameters=Parameters, random=Random, map=Map, silent=TRUE, DLL="multivariate_kalman_with_simulation")
+    SimData <- Obj$simulate( par=Obj$env$last.par, complete=TRUE )
+    Obj2 <- MakeADFun(data=SimData['y_tp'], parameters=Parameters, random=Random, map=Map, silent=TRUE, DLL="multivariate_kalman_with_simulation")
     SimPar[i,] = TMBhelper::Optimize(obj=Obj2, getsd=FALSE, newtonsteps=1)$par
     if( i%%10 == 0 ) message(paste0("Finished replicate ",i))
   }
