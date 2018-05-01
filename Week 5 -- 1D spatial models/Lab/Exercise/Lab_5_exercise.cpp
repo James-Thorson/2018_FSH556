@@ -31,16 +31,6 @@ Type objective_function<Type>::operator() ()
 
   // Probability of random effects
   vector<Type> dist_s(n_s);
-  if( Options_vec(0)==0 ){
-    jnll_comp(1) -= dnorm( epsilon_s(0), Type(0.0), pow(sigma2,0.5), true );
-    for(int s=1; s<n_s; s++){
-      dist_s(s) = loc_s(s)-loc_s(s-1);
-      jnll_comp(1) -= dnorm( epsilon_s(s), pow(rho,dist_s(s))*epsilon_s(s-1), pow(sigma2*(1-pow(rho,2*dist_s(s))),0.5), true );
-    }
-  }
-  if( Options_vec(0)==1 ){
-    // NOT IMPLEMENTED //
-  }
   using namespace density;
   if( Options_vec(0)==2 ){
     matrix<Type> Cov_ss(n_s,n_s);
@@ -52,8 +42,15 @@ Type objective_function<Type>::operator() ()
     REPORT( Cov_ss );
     jnll_comp(1) += MVNORM(Cov_ss)( epsilon_s );
   }
-  if( Options_vec(0)==3 ){
-    // NOT IMPLEMENTED //
+  if( Options_vec(0)==100 ){
+    matrix<Type> Cov_ss(n_s,n_s);
+    for(int s1=0; s1<n_s; s1++){
+    for(int s2=s1; s2<n_s; s2++){
+      Cov_ss(s1,s2) = sigma2 * pow( rho, loc_s(s2)-loc_s(s1) );
+      if(s1!=s2) Cov_ss(s2,s1) = Cov_ss(s1,s2);
+    }}
+    REPORT( Cov_ss );
+    jnll_comp(1) += MVNORM(Cov_ss)( epsilon_s );
   }
 
   // Probability of data conditional on random effects

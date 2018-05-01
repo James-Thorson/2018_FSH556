@@ -46,6 +46,10 @@ for(i in 1:ncol(c_si)){
   c_si[s,i] = rpois(1, exp(beta0 + epsilon_s[s]) )
 }}
 
+####################
+# Fit model
+####################
+
 # Compile
 Params = list( "beta0"=0, "ln_sigma2"=0, "logit_rho"=0, "epsilon_s"=rnorm(length(x)) )
 compile( "unequal_distance_autoregressive_V1.cpp" )
