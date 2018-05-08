@@ -40,3 +40,6 @@ unlist( Report[c('Range','SigmaO','SigmaE')] )
 Cov_Dt = Opt$SD$cov
 Corr_Dt = cov2cor( Cov_Dt )
 
+#
+plot( x=SimList$b_t, y=Opt$SD$value )
+matplot( x=1:SimList$n_years, y=cbind(SimList$b_t/mean(SimList$b_t),Opt$SD$value/mean(Opt$SD$value)), col=c("black","red"), type="l", lwd=2 )

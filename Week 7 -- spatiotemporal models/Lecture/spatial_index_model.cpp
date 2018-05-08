@@ -1,5 +1,6 @@
 
 #include <TMB.hpp>
+
 // Function for detecting NAs
 template<class Type>
 bool isNA(Type x){
@@ -68,11 +69,11 @@ Type objective_function<Type>::operator() ()
   Type jnll = jnll_comp.sum();
 
   // Derived quantities
-  vector<Type> D_t( n_t );
-  D_t.setZero();
+  vector<Type> b_t( n_t );
+  b_t.setZero();
   for( int t=0; t<n_t; t++){
   for( int s=0; s<n_s; s++){
-    D_t(t) += a_s(s) * exp(log_d_st(s,t));
+    b_t(t) += a_s(s) * exp(log_d_st(s,t));
   }}
 
   // Reporting
@@ -82,8 +83,8 @@ Type objective_function<Type>::operator() ()
   REPORT( SigmaE );
   REPORT( SigmaO );
   REPORT( log_d_st );
-  REPORT( D_t );
-  ADREPORT( D_t );
+  REPORT( b_t );
+  ADREPORT( b_t );
 
   return jnll;
 }
