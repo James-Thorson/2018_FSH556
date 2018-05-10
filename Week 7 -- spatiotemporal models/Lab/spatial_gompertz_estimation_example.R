@@ -30,19 +30,20 @@ DF[Which2Drop,'Simulated_example'] = NA
 # Reduce number of stations -- OPTIONAL
 n_knots = 50
 if( n_knots < nrow(loc_xy) ){
-  library(RANN)
-  knots_xy = kmeans( x=loc_xy, centers=n_knots )
+  knots_xy = kmeans( x=loc_xy_orig, centers=n_knots )
   # Modify data
   loc_xy = knots_xy$centers
   DF[,'Site'] = knots_xy$cluster[DF[,'Site']]
 }
 
-plot( loc_xy_orig, cex=2, pch=20 )
-points( loc_xy, cex=2, pch=3, col="red")
-
 # Build SPDE object using INLA (must pass mesh$idx$loc when supplying Boundary)
-mesh = inla.mesh.create( loc_xy )
+mesh = inla.mesh.create( loc_xy, refine=TRUE, extend=-0.5 )
 spde = inla.spde2.matern( mesh )
+
+# Visualize mesh and predictive process
+plot(mesh)
+points( loc_xy_orig, cex=1.5, pch=20 )
+points( loc_xy, cex=2, pch=3, col="green", lwd=5)
 
 # Generate grid to visualize density
 vizloc_xy = expand.grid( x=seq(0,1,by=0.001), y=seq(0,1,by=0.001) )
@@ -64,7 +65,7 @@ for( tI in 1:Sim_List$n_years ){
 ###################
 
 #####################
-#  Version 0 -- Sweep upstream to downstream through time
+#  Version 0 -- Sweep upstream to downstream through time "State-space parameterization"
 #####################
 
 Version = "spatial_gompertz_state_as_random"
@@ -90,7 +91,7 @@ Report0 = Obj$report()
 H0 = Obj$env$spHess()
 
 ##################
-#  Version 3 -- Joint analysis using TMB functions
+#  Version 3 -- Joint analysis using TMB functions  "Innovations parameterization"
 ##################
 
 Version = "spatial_gompertz"
@@ -133,5 +134,4 @@ dev.new(); image(H3, main="Version3: TMB functions")
 # Run times
 Opt0$run_time
 Opt3$run_time
-
 

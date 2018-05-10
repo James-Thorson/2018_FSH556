@@ -79,8 +79,10 @@ Type objective_function<Type>::operator() ()
   jnll_comp(0) = SCALE(GMRF(Q), exp(-log_tau_O))(Omega_x);
 
   // Epsilon
+  array<Type> Epsilon_xt(n_x, n_t);
   for(int t=0; t<n_t; t++){
-    jnll_comp(1) += SCALE( GMRF(Q), exp(-log_tau_U) )( log_D_xt.col(t) - log_Dpred_xt.col(t) );
+    Epsilon_xt.col(t) = log_D_xt.col(t) - log_Dpred_xt.col(t);
+    jnll_comp(1) += SCALE( GMRF(Q), exp(-log_tau_U) )( Epsilon_xt.col(t) );
   }
 
   // total_abundance contribution from observations

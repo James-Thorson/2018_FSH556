@@ -6,8 +6,8 @@ function( n_years, n_stations=100, phi=NULL, SpatialScale=0.1, SD_O=0.5, SD_E=0.
 
   # Spatial model
   if( is.null(Loc) ) Loc = cbind( "x"=runif(n_stations, min=0,max=1), "y"=runif(n_stations, min=0,max=1) )
-  model_O <- RMgauss(var=SD_O^2, scale=SpatialScale)
-  model_E <- RMgauss(var=SD_E^2, scale=SpatialScale)
+  model_O <- RandomFields::RMgauss(var=SD_O^2, scale=SpatialScale)
+  model_E <- RandomFields::RMgauss(var=SD_E^2, scale=SpatialScale)
 
   # Simulate Omega
   Omega = RFsimulate(model = model_O, x=Loc[,'x'], y=Loc[,'y'])@data[,1]
@@ -18,7 +18,7 @@ function( n_years, n_stations=100, phi=NULL, SpatialScale=0.1, SD_O=0.5, SD_E=0.
     Epsilon[,t] = RFsimulate(model=model_E, x=Loc[,'x'], y=Loc[,'y'])@data[,1]
   }
 
-  # Calculate Psi
+  # Calculate Theta
   Theta = array(NA, dim=c(n_stations,n_years))
   for(t in 1:n_years){
     if(t==1) Theta[,t] = phi + Epsilon[,t] + (alpha + Omega)/(1-rho)
