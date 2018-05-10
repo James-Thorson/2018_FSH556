@@ -37,5 +37,6 @@ function( n_years, n_stations=100, phi=NULL, SpatialScale=0.1, SD_O=0.5, SD_E=0.
 
   # Return stuff
   Sim_List = list("DF"=DF, "phi"=phi, "Loc"=Loc, "Omega"=Omega, "Epsilon"=Epsilon, "Theta"=Theta)
+  Sim_List[["Parameters"]] = c('SpatialScale'=SpatialScale, 'SigmaO'=SD_O, 'SigmaE'=SD_E, 'rho'=rho, 'phi'=phi)
   return(Sim_List)
 }

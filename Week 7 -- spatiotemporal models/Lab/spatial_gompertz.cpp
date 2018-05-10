@@ -78,7 +78,7 @@ Type objective_function<Type>::operator() ()
   // Likelihood contribution from observations
   vector<Type> log_chat_i(n_i);
   for (int i=0; i<n_i; i++){
-    log_chat_i(i) = phi*pow(rho,t_i(i)) + Epsilon_xt(x_s(s_i(i)),t_i(i)) + (eta_x(x_s(s_i(i))) + Omega_x(x_s(s_i(i))) ) / (1-rho);
+    log_chat_i(i) = phi*pow(rho,t_i(i)) + (eta_x(x_s(s_i(i))) + Omega_x(x_s(s_i(i)) + Epsilon_xt(x_s(s_i(i)),t_i(i))) ) / (1-rho);
     if( !isNA(c_i(i)) ){
       jnll_comp(2) -= dpois( c_i(i), exp(log_chat_i(i)), true );
     }
@@ -100,6 +100,7 @@ Type objective_function<Type>::operator() ()
   REPORT( Epsilon_xt );
   REPORT( Omega_x );
   REPORT( Equil_x );
+  REPORT( phi );
 
   return jnll;
 }

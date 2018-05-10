@@ -109,6 +109,7 @@ Type objective_function<Type>::operator() ()
   REPORT( log_Dpred_xt );
   REPORT( Omega_x );
   REPORT( Equil_x );
+  REPORT( phi );
 
   return jnll;
 }
