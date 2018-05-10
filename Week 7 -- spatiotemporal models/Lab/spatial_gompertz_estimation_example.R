@@ -11,14 +11,21 @@ setwd( "C:/Users/James.Thorson/Desktop/Project_git/2018_FSH556/Week 7 -- spatiot
 library(INLA)
 library(TMB)
 library(RandomFields)
+library(raster)
+library(RANN)
 
 source( "Sim_Gompertz_Fn.R" )
 
 # Read data
 set.seed( 2 )
-Sim_List = Sim_Gompertz_Fn( n_years=10, n_stations=100, SpatialScale=0.1, SD_O=0.4, SD_E=0.2, SD_extra=0, rho=0.5, logMeanDens=1, phi=0.0, Loc=NULL )
+Sim_List = Sim_Gompertz_Fn( n_years=10, n_stations=1000, SpatialScale=0.1, SD_O=0.4, SD_E=1, SD_extra=0, rho=0.5, logMeanDens=1, phi=-2, Loc=NULL )
 DF = Sim_List[["DF"]]
 loc_xy_orig = loc_xy = Sim_List[["Loc"]]
+
+# Reduce sample sizes to 100 per year
+Which2Keep = sample(1:nrow(DF), size=100*Sim_List$n_years, replace=FALSE)
+Which2Drop = setdiff(1:nrow(DF),Which2Keep)
+DF[Which2Drop,'Simulated_example'] = NA
 
 # Reduce number of stations -- OPTIONAL
 n_knots = 50
@@ -37,8 +44,17 @@ points( loc_xy, cex=2, pch=3, col="red")
 mesh = inla.mesh.create( loc_xy )
 spde = inla.spde2.matern( mesh )
 
-# display stations
-#plot( x=loc_xy[,'x'], y=loc_xy[,'y'])
+# Generate grid to visualize density
+vizloc_xy = expand.grid( x=seq(0,1,by=0.001), y=seq(0,1,by=0.001) )
+knots_xy = nn2( data=loc_xy_orig, query=vizloc_xy, k=1 )
+
+# Plot densities
+par( mfrow=c(2,5), mar=c(2,2,2,0), mgp=c(1.5,0.25,0) )
+for( tI in 1:Sim_List$n_years ){
+  vizTheta_xy = array(Sim_List$Theta[ cbind(knots_xy$nn.idx,tI) ], dim=c(1001,1001) )
+  rasterTheta_xy = raster( vizTheta_xy )
+  plot( rasterTheta_xy, xlim=c(0,1), ylim=c(0,1), main=paste0("Year ",tI) )
+}
 
 
 ###################
