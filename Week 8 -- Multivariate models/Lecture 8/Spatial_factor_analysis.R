@@ -11,10 +11,10 @@ library(RandomFields)
 #########################
 
 # Source
-source( "Sim_Fn.R")
+source( "Sim_Fn.R" )
 
 # Simulation settings
-n_factors_true = 6
+n_factors_true = 3
 n_species = 10
 n_stations = 100
 
@@ -55,8 +55,8 @@ Report = Obj$report()
 
 # Compare with simulated values
 # Psi (loadings matrix)
-Report$Loadings_pf
 Data_List$Loadings_pf
+Report$Loadings_pf
 
 # Compare covariances
 plot( x=Report$Loadings_pf%*%t(Report$Loadings_pf), y=Data_List$Loadings_pf%*%t(Data_List$Loadings_pf), xlab="Estimated covariance", ylab="True covariance" )
@@ -67,6 +67,10 @@ par( mfrow=c(1,min(n_factors_true,n_factors_estimation)) )
 for(fI in 1:min(n_factors_true,n_factors_estimation)){
   plot(y=Report$Omega_xf[1:n_stations,fI], x=Data_List$Omega_sf[,fI], xlab="True", ylab="Estimated", main=paste("Factor",fI))
 }
+
+# Compare for non-matching number of factors
+Eigen = eigen( Data_List$Loadings_pf %*% t(Data_List$Loadings_pf) )
+Eigen_hat = eigen( Report$Loadings_pf %*% t(Report$Loadings_pf) )
 
 ##########################
 # Real dataset
