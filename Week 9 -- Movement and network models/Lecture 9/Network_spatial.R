@@ -67,7 +67,17 @@ for( b in 1:length(epsilon_b) ){
 # Simulate data
 lambda_i = exp( epsilon_b + log_mean )
 c_iz = matrix( rpois(n=length(lambda_i)*Npass, lambda=outer(lambda_i,detect_per_pass[1:Npass])), ncol=Npass )
-#c_iz[] = NA
+
+# Plot detectability
+if( Npass>1 ){
+  prop_iz = c_iz / outer( rowSums(c_iz), rep(1,Npass) )
+  png( file=paste0("Detectability.png"), width=4, height=4, res=200, units="in" )
+    par( mar=c(3,3,1,1), mgp=c(2,0.5,0), tck=-0.02 )
+    matplot( y=t(prop_iz), type="l", col="blue", lty="dotted", log="y", xlab="Pass", ylab="Detection probability / proportion" )
+    lines( detect_per_pass/sum(detect_per_pass), lwd=3 )
+    legend( "topright", legend=c("True","Observed"), fill=c("black","blue"), bty="n" )
+  dev.off()
+}
 
 # Format inputs for TMB
 Data = list( "Options_vec"=c(0), "c_iz"=c_iz, "b_i"=b_i-1, "parent_b"=DF_b[,'parent_b']-1, "child_b"=DF_b[,'child_b']-1, "dist_b"=DF_b[,'dist_b'] )
