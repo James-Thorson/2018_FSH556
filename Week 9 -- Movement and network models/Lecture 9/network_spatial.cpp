@@ -15,7 +15,7 @@ Type objective_function<Type>::operator() ()
   DATA_IVECTOR( Options_vec );  // Slot 0: method;  0=conditiona;  1=joint
 
   // Data
-  DATA_VECTOR(c_i);         // Count data
+  DATA_MATRIX(c_iz);         // Count data per site i and pass z
   DATA_FACTOR(b_i);         // Branch number b for each observationp
 
   // Inputs regarding branched network
@@ -27,13 +27,15 @@ Type objective_function<Type>::operator() ()
   PARAMETER(log_theta);             // Autocorrelation (i.e. density dependence)
   PARAMETER(log_SD);
   PARAMETER(log_mean);
+  PARAMETER(logit_detect_prob);
 
   // Random effects
   PARAMETER_VECTOR(Epsiloninput_b);  // Spatial process variation
 
   // objective function -- joint negative log-likelihood
-  int n_i = c_i.size();
+  int n_i = c_iz.col(0).size();
   int n_b = Epsiloninput_b.size();
+  int n_z = c_iz.row(0).size();
   Type jnll = 0; 
 
   // Derived parameters
@@ -41,6 +43,11 @@ Type objective_function<Type>::operator() ()
   Type theta = exp(log_theta);
   Type mu = exp(log_mean);
   Type SDmarg = SDinput / sqrt(2*theta);
+  Type detect_prob = invlogit( logit_detect_prob );
+  vector<Type> detect_per_pass(n_z);
+  for (int z=0; z<n_z; z++){
+    detect_per_pass(z) = detect_prob * pow(1-detect_prob, float(z));
+  }
 
   // Probability of GRF on network -- SPATIAL
   // Version 0: Sweep upstream to downstream through network
@@ -86,13 +93,15 @@ Type objective_function<Type>::operator() ()
   // Probability of data given GRF
   vector<Type> lambda_i( n_i );
   for (int i=0; i<n_i; i++){
+  for (int z=0; z<n_z; z++){
     lambda_i(i) = exp( log_mean + Epsiloninput_b(b_i(i)) );
-    if( !isNA(c_i(i)) ){
-      jnll -= dpois(c_i(i), lambda_i(i), true);
+    if( !isNA(c_iz(i,z)) ){
+      jnll -= dpois(c_iz(i,z), lambda_i(i)*detect_per_pass(z), true);
     }
-  }
+  }}
 
   REPORT( SDmarg );
+  REPORT( detect_per_pass );
 
   return jnll;
 }
