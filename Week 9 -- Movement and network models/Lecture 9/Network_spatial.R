@@ -27,8 +27,8 @@ Rho=0.3           # Correlation at distance = 1
 SDmarg=0.3
 theta = -log(Rho)  # Decorrelation rate per distance
 log_mean = 4
-detect_prob = 0.99
-Npass = 1
+detect_prob = 0.5
+Npass = 3
 
 # Detection probability for each pass
 detect_per_pass = rep(NA,Npass)
@@ -41,18 +41,18 @@ SDinput = SDmarg * sqrt(2*theta)
 SDcond = SDmarg * sqrt(1-Rho^2)
 
 # Simulate random effect
-epsilon_b = rep(NA, length(b_i))
+omega_b = rep(NA, length(b_i))
 pow = function(a,b) a^b
 Type = function(a) a
 rho_b = SDinput_b = rep(NA, length(b_i))
-for( b in 1:length(epsilon_b) ){
+for( b in 1:length(omega_b) ){
   if( is.na(dist_b[b]) ){
     # Correlation between i and parent(i) as distance -> INF
     rho_b[b] = 0;
     # SD of Ornstein-Uhlenbeck process as distance -> INF
     SDinput_b[b] = SDinput / pow(2*theta, 0.5);
     # conditional probability
-    epsilon_b[b] = rnorm(n=1, Type(0.0), SDinput_b[b] );
+    omega_b[b] = rnorm(n=1, Type(0.0), SDinput_b[b] );
   }
   if( !is.na(dist_b[b]) ){
     # Correlation between i and parent(i)
@@ -60,12 +60,12 @@ for( b in 1:length(epsilon_b) ){
     # SD of O-U process
     SDinput_b[b] = pow( pow(SDinput,2)/(2*theta) * (1-exp(-2*theta*dist_b[b])), 0.5 );
     # conditional probability
-    epsilon_b[b] = rnorm(n=1, rho_b[b]*epsilon_b[parent_b[b]], SDinput_b[b] );
+    omega_b[b] = rnorm(n=1, rho_b[b]*omega_b[parent_b[b]], SDinput_b[b] );
   }
 }
 
 # Simulate data
-lambda_i = exp( epsilon_b + log_mean )
+lambda_i = exp( omega_b + log_mean )
 c_iz = matrix( rpois(n=length(lambda_i)*Npass, lambda=outer(lambda_i,detect_per_pass[1:Npass])), ncol=Npass )
 
 # Plot detectability
@@ -90,6 +90,9 @@ if( Npass==1 ){
   Map[["logit_detect_prob"]] = factor(NA)
   Params[["logit_detect_prob"]] = qlogis(0.9999)
 }
+
+# Exclude data from "join" nodes
+c_iz[c(3,5),] = NA
 
 # Compile TMB
 compile( "network_spatial.cpp" )
@@ -129,5 +132,15 @@ Opt1 = TMBhelper::Optimize( obj=Obj, newtonsteps=1 )
 Report1 = Obj$report()
 
 # Compare MLE from two methods
-rbind( "True"=c(log(theta),SDinput,log_mean), "Method1"=Opt0$par, "Method2"=Opt1$par )
+True = c(log(theta),SDinput,log_mean)
+if( Npass>1 ) True = c(True, qlogis(detect_prob))
+rbind( "True"=True, "Method1"=Opt0$par, "Method2"=Opt1$par )
+
+# Compare timings
+c( Opt0$run_time, Opt1$run_time )
+
+# Bias-correcting estimates
+Opt1 = TMBhelper::Optimize( obj=Obj, newtonsteps=1, bias.correct=TRUE )
+summary( Opt1$SD, "report" )
+
 

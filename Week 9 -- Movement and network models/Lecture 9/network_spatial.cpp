@@ -102,6 +102,7 @@ Type objective_function<Type>::operator() ()
 
   REPORT( SDmarg );
   REPORT( detect_per_pass );
+  ADREPORT( lambda_i );
 
   return jnll;
 }
