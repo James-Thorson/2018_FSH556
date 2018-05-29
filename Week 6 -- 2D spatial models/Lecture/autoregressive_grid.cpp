@@ -62,7 +62,6 @@ Type objective_function<Type>::operator() ()
   Type rho = 1 / (1 + exp(-logit_rho));
 
   // Probability of random effects
-  using namespace density;
   ///// Make precision matrix for single axis
   matrix<Type> Q_yy(n_y,n_y);
   Q_yy.setZero();
@@ -106,6 +105,7 @@ Type objective_function<Type>::operator() ()
     //jnll_comp(1) += GMRF(Q_zz)( epsilon_z );
   }
   //// Calculate using built-in TMB functions
+  using namespace density;
   if( Options_vec(0)==3 ){
     jnll_comp(1) += SCALE( SEPARABLE(AR1(rho),AR1(rho)), pow(sigma2,0.5) / pow(1-pow(rho,2),0.5) / pow(1-pow(rho,2),0.5) )( epsilon_xy );      // Include "pow(1-pow(rho,2),0.5)" twice for 2D unit variance
   }

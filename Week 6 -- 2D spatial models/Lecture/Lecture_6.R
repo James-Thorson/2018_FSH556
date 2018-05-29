@@ -37,13 +37,13 @@ M2 = as( ifelse(as.matrix(dist(loc_xy,diag=TRUE,upper=TRUE))==sqrt(2),1,0), "dgT
 
 # Compile
 Params = list( "beta0"=0, "ln_sigma2"=0, "logit_rho"=0, "epsilon_xy"=array(rnorm(prod(dim(loc_xy)))-100,dim=dim(epsilon_xy)) )
-compile( "autoregressive_grid_V1.cpp" )
-dyn.load( dynlib("autoregressive_grid_V1") )
+compile( "autoregressive_grid.cpp" )
+dyn.load( dynlib("autoregressive_grid") )
 
 ######## Version 0 -- Sweep downstream
 # Build object
 Data = list("Options_vec"=c(0), "c_xy"=c_xy, "M0"=M0, "M1"=M1, "M2"=M2 )
-Obj = MakeADFun( data=Data, parameters=Params, random="epsilon_xy", DLL="autoregressive_grid_V1" )
+Obj = MakeADFun( data=Data, parameters=Params, random="epsilon_xy", DLL="autoregressive_grid" )
 # Optimize
 Opt0 = TMBhelper::Optimize( obj=Obj, newtonsteps=1 )
 h0 = Obj$env$spHess(random=TRUE)
@@ -52,7 +52,7 @@ report0 = Obj$report()
 ######## Version 1 -- Analytic precision matrix
 # Build object
 Data = list("Options_vec"=c(1), "c_xy"=c_xy, "M0"=M0, "M1"=M1, "M2"=M2 )
-Obj = MakeADFun( data=Data, parameters=Params, random="epsilon_xy", DLL="autoregressive_grid_V1" )
+Obj = MakeADFun( data=Data, parameters=Params, random="epsilon_xy", DLL="autoregressive_grid" )
 # Optimize
 Opt1 = TMBhelper::Optimize( obj=Obj, newtonsteps=1 )
 h1 = Obj$env$spHess(random=TRUE)
@@ -61,7 +61,7 @@ report1 = Obj$report()
 ######## Version 3 -- Built-in function for AR process
 # Build object
 Data = list("Options_vec"=c(3), "c_xy"=c_xy, "M0"=M0, "M1"=M1, "M2"=M2 )
-Obj = MakeADFun( data=Data, parameters=Params, random="epsilon_xy", DLL="autoregressive_grid_V1" )
+Obj = MakeADFun( data=Data, parameters=Params, random="epsilon_xy", DLL="autoregressive_grid" )
 # Optimize
 Opt3 = TMBhelper::Optimize( obj=Obj, newtonsteps=1 )
 h3 = Obj$env$spHess(random=TRUE)
@@ -70,14 +70,14 @@ report3 = Obj$report()
 ######## Version 4 -- Assemble sparse precision matrix using external computation (probably the easiest to generalize)
 # Build object
 Data = list("Options_vec"=c(3), "c_xy"=c_xy, "M0"=M0, "M1"=M1, "M2"=M2 )
-Obj = MakeADFun( data=Data, parameters=Params, random="epsilon_xy", DLL="autoregressive_grid_V1" )
+Obj = MakeADFun( data=Data, parameters=Params, random="epsilon_xy", DLL="autoregressive_grid" )
 # Optimize
 Opt4 = TMBhelper::Optimize( obj=Obj, newtonsteps=1 )
 h4 = Obj$env$spHess(random=TRUE)
 report4 = Obj$report()
 
 # Compare results
-cbind( par0, par1, par3, par4 )
+cbind( Opt0$par, Opt1$par, Opt3$par, Opt4$par )
 c( Opt0$run_time, Opt1$run_time, Opt3$run_time, Opt4$run_time )
 
 # Compare hessian sparseness
@@ -85,3 +85,5 @@ image( h0, main="Version 0" ); dev.new()
 image( h1, main="Version 1" ); dev.new()
 image( h3, main="Version 3" ); dev.new()
 image( h4, main="Version 4" )
+
+
