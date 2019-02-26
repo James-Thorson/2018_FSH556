@@ -7,7 +7,7 @@ devtools::install_github("nwfsc-assess/geostatistical_delta-GLMM")
 library( TMB )
 
 # Set working directory (change on other machine!)
-setwd( "C:/Users/James.Thorson/Desktop/Project_git/2018_FSH556/Week 1 -- Likelihoods and linear models/Lecture 1" )
+setwd( "C:/Users/James.Thorson/Documents/GitHub/2018_FSH556/Week 1 -- Likelihoods and linear models/Lecture 1" )
 
 
 ############
@@ -15,7 +15,7 @@ setwd( "C:/Users/James.Thorson/Desktop/Project_git/2018_FSH556/Week 1 -- Likelih
 ############
 
 # Data
-data(WCGBTS_Canary_example, package="SpatialDeltaGLMM")
+data(WCGBTS_Canary_example, package="FishStatsUtils")
 CPUE = WCGBTS_Canary_example$HAUL_WT_KG
 # Visualize
 png( file="Canary_histogram.png", width=4, height=4, res=200, units="in")
